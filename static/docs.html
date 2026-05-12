@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>API Docs - Notification Listener</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css" />
+<style>
+body{margin:0;background:#0f172a}
+#swagger-ui .topbar{display:none}
+#auth-error{color:#f87171;text-align:center;padding:40px;font-family:sans-serif}
+#auth-error a{color:#38bdf8}
+</style>
+</head>
+<body>
+<div id="auth-error" style="display:none">
+  <h2>Autentikasi Diperlukan</h2>
+  <p>Silakan <a href="/">login ke dashboard</a> terlebih dahulu untuk mengakses dokumentasi API.</p>
+</div>
+<div id="swagger-ui"></div>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-standalone-preset.js"></script>
+<script>
+const token = localStorage.getItem('nl_token');
+if (!token) {
+  document.getElementById('auth-error').style.display = 'block';
+  document.getElementById('swagger-ui').style.display = 'none';
+} else {
+  SwaggerUIBundle({
+    url: '/api/openapi.json',
+    dom_id: '#swagger-ui',
+    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+    layout: 'StandaloneLayout',
+    requestInterceptor: (req) => {
+      req.headers['Authorization'] = 'Bearer ' + token;
+      return req;
+    }
+  });
+}
+</script>
+</body>
+</html>

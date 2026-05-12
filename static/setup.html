@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="apple-touch-icon" href="/static/icon.svg" />
+    <title>Setup - Notification Listener</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100dvh;
+        padding: 16px;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .box {
+        background: #1e293b;
+        padding: 28px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 450px;
+        border: 1px solid #334155;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      }
+      h1 {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+        color: #38bdf8;
+      }
+      p {
+        color: #94a3b8;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+      input {
+        width: 100%;
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+        margin-bottom: 18px;
+        font-size: 1rem;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      input:focus {
+        border-color: #0ea5e9;
+      }
+      button {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        background: #0ea5e9;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        font-size: 1rem;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+      .error {
+        color: #f87171;
+        font-size: 0.85rem;
+        margin-top: 12px;
+      }
+      .success {
+        color: #34d399;
+        font-size: 0.85rem;
+        margin-top: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h1>Initial Setup</h1>
+      <p>Konfigurasi pertama Notification Listener</p>
+      <label>Username Dashboard</label>
+      <input
+        type="text"
+        id="username"
+        placeholder="admin"
+        autocomplete="username"
+      />
+      <label>Password Dashboard</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="••••••"
+        autocomplete="new-password"
+      />
+      <label>Laravel API Key</label>
+      <input type="text" id="api_key" placeholder="secret-key" />
+      <label>Laravel Webhook URL</label>
+      <input
+        type="url"
+        id="webhook_url"
+        placeholder="https://laravel.app/webhook"
+      />
+      <button onclick="setup()">Simpan & Mulai</button>
+      <div id="msg"></div>
+    </div>
+    <script>
+      async function setup() {
+        const body = {
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value,
+          api_key: document.getElementById("api_key").value,
+          webhook_url: document.getElementById("webhook_url").value,
+        };
+        const res = await fetch("/setup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        const msg = document.getElementById("msg");
+        if (res.ok) {
+          msg.className = "success";
+          msg.textContent = "Berhasil! Mengalihkan ke login...";
+          setTimeout(() => (location.href = "/"), 1500);
+        } else {
+          msg.className = "error";
+          msg.textContent = data.detail || "Terjadi kesalahan";
+        }
+      }
+      if ("serviceWorker" in navigator)
+        navigator.serviceWorker.register("/static/sw.js");
+    </script>
+  </body>
+</html>

@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="apple-touch-icon" href="/static/icon.svg" />
+    <title>Login - Notification Listener</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100dvh;
+        padding: 16px;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .card {
+        background: #1e293b;
+        padding: 28px;
+        border-radius: 16px;
+        width: 100%;
+        max-width: 420px;
+        border: 1px solid #334155;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      }
+      .logo {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 16px;
+        display: block;
+      }
+      h1 {
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 4px;
+        color: #38bdf8;
+      }
+      .sub {
+        text-align: center;
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-bottom: 24px;
+      }
+      label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+      .input-wrap {
+        position: relative;
+        margin-bottom: 18px;
+      }
+      input {
+        width: 100%;
+        padding: 14px 44px 14px 14px;
+        border-radius: 10px;
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+        font-size: 1rem;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      input:focus {
+        border-color: #0ea5e9;
+      }
+      .toggle {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        cursor: pointer;
+        padding: 6px;
+      }
+      button {
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        background: #0ea5e9;
+        color: #fff;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      button:active {
+        transform: scale(0.98);
+      }
+      .error {
+        color: #f87171;
+        font-size: 0.85rem;
+        margin-top: 12px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <svg
+        class="logo"
+        viewBox="0 0 64 64"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <rect width="64" height="64" rx="16" fill="#0f172a" />
+        <circle cx="32" cy="32" r="14" fill="#0ea5e9" />
+        <path
+          d="M32 18v28M18 32h28"
+          stroke="#0f172a"
+          stroke-width="4"
+          stroke-linecap="round"
+        />
+      </svg>
+      <h1>Notification Listener</h1>
+      <p class="sub">Masukkan password dashboard</p>
+      <label>Password</label>
+      <div class="input-wrap">
+        <input
+          type="password"
+          id="pass"
+          placeholder="••••••••"
+          autocomplete="current-password"
+        />
+        <button type="button" class="toggle" onclick="togglePw()">Lihat</button>
+      </div>
+      <button onclick="doLogin()">Masuk</button>
+      <div id="msg" class="error"></div>
+    </div>
+    <script>
+      if (localStorage.getItem("nl_token")) location.href = "/dashboard";
+      function togglePw() {
+        const i = document.getElementById("pass");
+        i.type = i.type === "password" ? "text" : "password";
+      }
+      async function doLogin() {
+        const msg = document.getElementById("msg");
+        msg.textContent = "";
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            password: document.getElementById("pass").value,
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("nl_token", data.token);
+          location.href = "/dashboard";
+        } else {
+          msg.textContent = data.detail || "Login gagal";
+        }
+      }
+      document.getElementById("pass").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") doLogin();
+      });
+      if ("serviceWorker" in navigator)
+        navigator.serviceWorker.register("/static/sw.js");
+    </script>
+  </body>
+</html>

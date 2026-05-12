@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="theme-color" content="#0ea5e9" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <link rel="manifest" href="/static/manifest.json" />
+    <link rel="apple-touch-icon" href="/static/icon.svg" />
+    <title>Dashboard - Notification Listener</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        -webkit-tap-highlight-color: transparent;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px;
+      }
+      @media (min-width: 768px) {
+        .container {
+          padding: 20px;
+        }
+      }
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 0;
+        border-bottom: 1px solid #334155;
+        margin-bottom: 14px;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      header h1 {
+        font-size: 1.2rem;
+        color: #38bdf8;
+      }
+      @media (min-width: 768px) {
+        header h1 {
+          font-size: 1.4rem;
+        }
+      }
+      .btn {
+        padding: 10px 14px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: 600;
+        min-height: 44px;
+      }
+      .btn-primary {
+        background: #0ea5e9;
+        color: #fff;
+      }
+      .btn-danger {
+        background: #ef4444;
+        color: #fff;
+      }
+      .btn-secondary {
+        background: #475569;
+        color: #fff;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      @media (min-width: 768px) {
+        .grid {
+          grid-template-columns: repeat(4, 1fr);
+          gap: 15px;
+        }
+      }
+      .card {
+        background: #1e293b;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #334155;
+        margin-bottom: 14px;
+      }
+      @media (min-width: 768px) {
+        .card {
+          padding: 20px;
+          margin-bottom: 16px;
+        }
+      }
+      .card h3 {
+        font-size: 0.8rem;
+        color: #94a3b8;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .stat {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #38bdf8;
+      }
+      @media (min-width: 768px) {
+        .stat {
+          font-size: 1.6rem;
+        }
+      }
+      .url {
+        font-size: 0.85rem;
+        color: #34d399;
+        word-break: break-all;
+      }
+      .small {
+        font-size: 0.78rem;
+        color: #64748b;
+      }
+      .tabs {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 14px;
+        border-bottom: 1px solid #334155;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .tab-btn {
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        border-bottom: 2px solid transparent;
+        white-space: nowrap;
+      }
+      .tab-btn.active {
+        color: #38bdf8;
+        border-bottom-color: #38bdf8;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78rem;
+        margin-top: 8px;
+        min-width: 500px;
+      }
+      @media (min-width: 768px) {
+        table {
+          font-size: 0.82rem;
+          min-width: auto;
+        }
+      }
+      th,
+      td {
+        padding: 10px 8px;
+        text-align: left;
+        border-bottom: 1px solid #334155;
+      }
+      th {
+        color: #94a3b8;
+        font-weight: 600;
+      }
+      .badge {
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        display: inline-block;
+      }
+      .badge-success {
+        background: #064e3b;
+        color: #34d399;
+      }
+      .badge-failed {
+        background: #450a0a;
+        color: #f87171;
+      }
+      input {
+        width: 100%;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #0f172a;
+        color: #e2e8f0;
+        margin-bottom: 10px;
+        font-size: 1rem;
+        outline: none;
+        -webkit-appearance: none;
+        appearance: none;
+      }
+      input:focus {
+        border-color: #0ea5e9;
+      }
+      .list-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        background: #0f172a;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        border: 1px solid #334155;
+        gap: 10px;
+      }
+      .list-item span {
+        word-break: break-all;
+        font-size: 0.85rem;
+      }
+      pre {
+        background: #0f172a;
+        padding: 10px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 0.78rem;
+        color: #cbd5e1;
+        border: 1px solid #334155;
+      }
+      .control-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      #control-msg {
+        margin-top: 10px;
+        font-size: 0.85rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Notification Listener</h1>
+        <div style="display: flex; gap: 8px">
+          <button class="btn btn-secondary" onclick="location.href = '/docs'">
+            Docs
+          </button>
+          <button class="btn btn-danger" onclick="logout()">Logout</button>
+        </div>
+      </header>
+
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab(this, 'monitor')">
+          Monitoring
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'logs')">Logs</button>
+        <button class="tab-btn" onclick="switchTab(this, 'config')">
+          Konfigurasi
+        </button>
+        <button class="tab-btn" onclick="switchTab(this, 'control')">
+          Kontrol
+        </button>
+      </div>
+
+      <div id="tab-monitor" class="tab-content active">
+        <div class="grid">
+          <div class="card">
+            <h3>Status Server</h3>
+            <div class="stat" id="uptime">-</div>
+          </div>
+          <div class="card">
+            <h3>Total Notifikasi</h3>
+            <div class="stat" id="stat-notif">0</div>
+          </div>
+          <div class="card">
+            <h3>Webhook Sukses</h3>
+            <div class="stat" id="stat-ws">0</div>
+          </div>
+          <div class="card">
+            <h3>Webhook Gagal</h3>
+            <div class="stat" id="stat-wf">0</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Tunnel URL</h3>
+          <div class="url" id="tunnel-url">-</div>
+          <div class="small" id="tunnel-status">Status: -</div>
+        </div>
+      </div>
+
+      <div id="tab-logs" class="tab-content">
+        <div class="card" style="margin-bottom: 15px">
+          <h3>Notifikasi Masuk</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Package</th>
+                  <th>Text</th>
+                  <th>Nominal</th>
+                </tr>
+              </thead>
+              <tbody id="notif-tbody">
+                <tr>
+                  <td colspan="4" class="small">Tidak ada data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Webhook Logs</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Waktu</th>
+                  <th>Status</th>
+                  <th>Response</th>
+                </tr>
+              </thead>
+              <tbody id="webhook-tbody">
+                <tr>
+                  <td colspan="3" class="small">Tidak ada data</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="tab-config" class="tab-content">
+        <div class="card" style="margin-bottom: 15px">
+          <h3>Webhook & API Key</h3>
+          <label class="small">Webhook URL</label>
+          <input type="url" id="cfg-webhook" placeholder="https://..." />
+          <label class="small">API Key</label>
+          <input type="text" id="cfg-apikey" placeholder="secret" />
+          <button
+            class="btn btn-primary"
+            style="width: 100%"
+            onclick="saveConfig()"
+          >
+            Simpan
+          </button>
+        </div>
+        <div class="card">
+          <h3>Daftar Aplikasi (Package Name)</h3>
+          <div style="display: flex; gap: 8px; margin-bottom: 12px">
+            <input
+              type="text"
+              id="new-pkg"
+              placeholder="com.gojek.app"
+              style="margin: 0; flex: 1"
+            />
+            <button class="btn btn-primary" onclick="addPkg()">Tambah</button>
+          </div>
+          <div id="pkg-list"></div>
+        </div>
+      </div>
+
+      <div id="tab-control" class="tab-content">
+        <div class="card control-row">
+          <button class="btn btn-secondary" onclick="restartTunnel()">
+            Restart Tunnel
+          </button>
+          <button class="btn btn-secondary" onclick="restartService()">
+            Restart Service
+          </button>
+        </div>
+        <div id="control-msg" class="small"></div>
+      </div>
+    </div>
+
+    <script>
+      const token = localStorage.getItem("nl_token");
+      if (!token) location.href = "/";
+
+      async function api(path, opts = {}) {
+        opts.headers = opts.headers || {};
+        opts.headers["Authorization"] = "Bearer " + token;
+        if (!opts.headers["Content-Type"] && opts.body)
+          opts.headers["Content-Type"] = "application/json";
+        const res = await fetch(path, opts);
+        if (res.status === 401) {
+          logout();
+        }
+        return res;
+      }
+      function logout() {
+        localStorage.removeItem("nl_token");
+        location.href = "/";
+      }
+
+      function switchTab(el, name) {
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((t) => t.classList.remove("active"));
+        el.classList.add("active");
+        document.getElementById("tab-" + name).classList.add("active");
+      }
+
+      async function loadStats() {
+        const r = await api("/api/stats");
+        const d = await r.json();
+        document.getElementById("stat-notif").textContent = d.notifications;
+        document.getElementById("stat-ws").textContent = d.webhook_success;
+        document.getElementById("stat-wf").textContent = d.webhook_failed;
+      }
+      async function loadStatus() {
+        const r = await api("/api/status");
+        const d = await r.json();
+        const mins = Math.floor(d.uptime_seconds / 60);
+        const hrs = Math.floor(mins / 60);
+        document.getElementById("uptime").textContent =
+          (hrs > 0 ? hrs + "j " : "") + (mins % 60) + "m";
+      }
+      async function loadTunnel() {
+        const r = await api("/api/tunnel");
+        const d = await r.json();
+        if (d) {
+          document.getElementById("tunnel-url").textContent = d.url || "-";
+          document.getElementById("tunnel-status").textContent =
+            "Status: " + (d.status || "-");
+        }
+      }
+      async function loadNotifLogs() {
+        const r = await api("/api/logs/notifications");
+        const d = await r.json();
+        const tb = document.getElementById("notif-tbody");
+        tb.innerHTML = d.length
+          ? d
+              .map(
+                (x) =>
+                  `<tr><td>${x.timestamp}</td><td>${x.package_name}</td><td>${(x.raw_text || "").substring(0, 40)}</td><td>Rp${x.parsed_amount}</td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="4" class="small">Tidak ada data</td></tr>';
+      }
+      async function loadWebhookLogs() {
+        const r = await api("/api/logs/webhooks");
+        const d = await r.json();
+        const tb = document.getElementById("webhook-tbody");
+        tb.innerHTML = d.length
+          ? d
+              .map(
+                (x) =>
+                  `<tr><td>${x.created_at}</td><td><span class="badge badge-${x.status}">${x.status}</span></td><td>${(x.response || "").substring(0, 50)}</td></tr>`,
+              )
+              .join("")
+          : '<tr><td colspan="3" class="small">Tidak ada data</td></tr>';
+      }
+      async function loadConfig() {
+        const r = await api("/api/config");
+        const d = await r.json();
+        document.getElementById("cfg-webhook").value = d.webhook_url || "";
+        document.getElementById("cfg-apikey").value = d.api_key || "";
+        const list = document.getElementById("pkg-list");
+        list.innerHTML = d.packages
+          .map(
+            (p) =>
+              `<div class="list-item"><span>${p}</span><button class="btn btn-danger" onclick="delPkg('${p}')">Hapus</button></div>`,
+          )
+          .join("");
+      }
+      async function saveConfig() {
+        const webhook = document.getElementById("cfg-webhook").value;
+        const apikey = document.getElementById("cfg-apikey").value;
+        await api("/api/config", {
+          method: "POST",
+          body: JSON.stringify({ webhook_url: webhook, api_key: apikey }),
+        });
+        alert("Konfigurasi disimpan");
+      }
+      async function addPkg() {
+        const pkg = document.getElementById("new-pkg").value;
+        if (!pkg) return;
+        await api("/api/packages", {
+          method: "POST",
+          body: JSON.stringify({ package_name: pkg }),
+        });
+        document.getElementById("new-pkg").value = "";
+        loadConfig();
+      }
+      async function delPkg(pkg) {
+        await api("/api/packages/" + pkg, { method: "DELETE" });
+        loadConfig();
+      }
+      async function restartTunnel() {
+        const r = await api("/api/restart/tunnel", { method: "POST" });
+        const d = await r.json();
+        document.getElementById("control-msg").textContent = d.message;
+      }
+      async function restartService() {
+        const r = await api("/api/restart/service", { method: "POST" });
+        const d = await r.json();
+        document.getElementById("control-msg").textContent = d.message;
+      }
+
+      function startPolling() {
+        loadStats();
+        loadStatus();
+        loadTunnel();
+        loadNotifLogs();
+        loadWebhookLogs();
+        loadConfig();
+        setInterval(() => {
+          loadStats();
+          loadStatus();
+          loadTunnel();
+          loadNotifLogs();
+          loadWebhookLogs();
+        }, 3000);
+      }
+      startPolling();
+      if ("serviceWorker" in navigator)
+        navigator.serviceWorker.register("/static/sw.js");
+    </script>
+  </body>
+</html>
