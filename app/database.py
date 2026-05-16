@@ -124,7 +124,7 @@ def add_notification_log(package_name, raw_text, parsed_amount):
         conn.commit()
 
 
-def get_notification_logs(limit=100):
+def get_notification_logs(limit=30):
     """Ambil log notifikasi terbaru."""
     with _connect() as conn:
         rows = conn.execute('''SELECT * FROM notification_logs
@@ -143,7 +143,7 @@ def add_webhook_log(payload, status, response):
         conn.commit()
 
 
-def get_webhook_logs(limit=100):
+def get_webhook_logs(limit=30):
     """Ambil log webhook terbaru."""
     with _connect() as conn:
         rows = conn.execute('''SELECT * FROM webhook_logs

@@ -39,12 +39,8 @@ pkg install -y \
     termux-api \
     git \
     wget \
-    clang \
-    make \
-    binutils \
     libffi \
-    openssl \
-    rust
+    openssl
 
 # ─── 3. Upgrade pip & setuptools ────────────────────────────────
 echo ""
@@ -59,8 +55,8 @@ echo "[4/7] Install library dependencies Python..."
 echo "    > [1/3] Menginstall pydantic-core & bcrypt dari Termux User Repository..."
 echo "    ⏳ Menggunakan pre-built wheel dari TUR (lebih cepat & stabil)..."
 pip install --extra-index-url "$TUR_INDEX" pydantic-core bcrypt || {
-    echo "    ⚠️  TUR gagal untuk beberapa library, mencoba fallback compile dari source..."
-    CARGO_BUILD_TARGET="" pip install pydantic-core bcrypt --no-binary :none:
+    echo "    ⚠️  TUR gagal. Mohon pastikan koneksi internet stabil."
+    exit 1
 }
 
 echo "    > [2/3] Menginstall dependencies lainnya..."

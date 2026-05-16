@@ -98,6 +98,26 @@ def get_stats(user: str = Depends(auth.verify_token)):
     return db.get_stats()
 
 
+@router.get("/api/dashboard")
+def get_dashboard_data(user: str = Depends(auth.verify_token)):
+    """Gabungan semua data polling untuk dashboard (optimasi polling)."""
+    from app import START_TIME
+    uptime = int(time.time() - START_TIME)
+    
+    return {
+        "status": {
+            "status": "running",
+            "uptime_seconds": uptime
+        },
+        "stats": db.get_stats(),
+        "tunnel": db.get_tunnel_info(),
+        "logs": {
+            "notifications": db.get_notification_logs(30),
+            "webhooks": db.get_webhook_logs(30)
+        }
+    }
+
+
 # ── API: Configuration ─────────────────────────────────────────
 
 @router.get("/api/config")

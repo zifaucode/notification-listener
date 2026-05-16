@@ -425,55 +425,50 @@
         document.getElementById("tab-" + name).classList.add("active");
       }
 
-      async function loadStats() {
-        const r = await api("/api/stats");
-        const d = await r.json();
-        document.getElementById("stat-notif").textContent = d.notifications;
-        document.getElementById("stat-ws").textContent = d.webhook_success;
-        document.getElementById("stat-wf").textContent = d.webhook_failed;
-      }
-      async function loadStatus() {
-        const r = await api("/api/status");
-        const d = await r.json();
-        const mins = Math.floor(d.uptime_seconds / 60);
-        const hrs = Math.floor(mins / 60);
-        document.getElementById("uptime").textContent =
-          (hrs > 0 ? hrs + "j " : "") + (mins % 60) + "m";
-      }
-      async function loadTunnel() {
-        const r = await api("/api/tunnel");
-        const d = await r.json();
-        if (d) {
-          document.getElementById("tunnel-url").textContent = d.url || "-";
-          document.getElementById("tunnel-status").textContent =
-            "Status: " + (d.status || "-");
+      async function loadDashboardData() {
+        try {
+          const r = await api("/api/dashboard");
+          const d = await r.json();
+          
+          // Stats
+          document.getElementById("stat-notif").textContent = d.stats.notifications;
+          document.getElementById("stat-ws").textContent = d.stats.webhook_success;
+          document.getElementById("stat-wf").textContent = d.stats.webhook_failed;
+          
+          // Status
+          const mins = Math.floor(d.status.uptime_seconds / 60);
+          const hrs = Math.floor(mins / 60);
+          document.getElementById("uptime").textContent =
+            (hrs > 0 ? hrs + "j " : "") + (mins % 60) + "m";
+            
+          // Tunnel
+          if (d.tunnel) {
+            document.getElementById("tunnel-url").textContent = d.tunnel.url || "-";
+            document.getElementById("tunnel-status").textContent =
+              "Status: " + (d.tunnel.status || "-");
+          }
+          
+          // Notif Logs
+          const tb1 = document.getElementById("notif-tbody");
+          tb1.innerHTML = d.logs.notifications.length
+            ? d.logs.notifications.map(
+                  (x) =>
+                    `<tr><td>${x.timestamp}</td><td>${x.package_name}</td><td>${(x.raw_text || "").substring(0, 40)}</td><td>Rp${x.parsed_amount}</td></tr>`,
+                ).join("")
+            : '<tr><td colspan="4" class="small">Tidak ada data</td></tr>';
+            
+          // Webhook logs
+          const tb2 = document.getElementById("webhook-tbody");
+          tb2.innerHTML = d.logs.webhooks.length
+            ? d.logs.webhooks.map(
+                  (x) =>
+                    `<tr><td>${x.created_at}</td><td><span class="badge badge-${x.status}">${x.status}</span></td><td>${(x.response || "").substring(0, 50)}</td></tr>`,
+                ).join("")
+            : '<tr><td colspan="3" class="small">Tidak ada data</td></tr>';
+            
+        } catch (e) {
+          console.error("Gagal mengambil data dashboard:", e);
         }
-      }
-      async function loadNotifLogs() {
-        const r = await api("/api/logs/notifications");
-        const d = await r.json();
-        const tb = document.getElementById("notif-tbody");
-        tb.innerHTML = d.length
-          ? d
-              .map(
-                (x) =>
-                  `<tr><td>${x.timestamp}</td><td>${x.package_name}</td><td>${(x.raw_text || "").substring(0, 40)}</td><td>Rp${x.parsed_amount}</td></tr>`,
-              )
-              .join("")
-          : '<tr><td colspan="4" class="small">Tidak ada data</td></tr>';
-      }
-      async function loadWebhookLogs() {
-        const r = await api("/api/logs/webhooks");
-        const d = await r.json();
-        const tb = document.getElementById("webhook-tbody");
-        tb.innerHTML = d.length
-          ? d
-              .map(
-                (x) =>
-                  `<tr><td>${x.created_at}</td><td><span class="badge badge-${x.status}">${x.status}</span></td><td>${(x.response || "").substring(0, 50)}</td></tr>`,
-              )
-              .join("")
-          : '<tr><td colspan="3" class="small">Tidak ada data</td></tr>';
       }
       async function loadConfig() {
         const r = await api("/api/config");
@@ -523,19 +518,11 @@
       }
 
       function startPolling() {
-        loadStats();
-        loadStatus();
-        loadTunnel();
-        loadNotifLogs();
-        loadWebhookLogs();
+        loadDashboardData();
         loadConfig();
         setInterval(() => {
-          loadStats();
-          loadStatus();
-          loadTunnel();
-          loadNotifLogs();
-          loadWebhookLogs();
-        }, 3000);
+          loadDashboardData();
+        }, 10000); // Poll setiap 10 detik
       }
       startPolling();
       if ("serviceWorker" in navigator)

@@ -13,7 +13,7 @@ import uvicorn
 # Parse --no-tunnel flag SEBELUM import app (agar flag terbaca saat create_app)
 NO_TUNNEL = "--no-tunnel" in sys.argv
 
-from app.config import PORT
+from app.config import PORT, LOG_LEVEL
 
 # Set flag di environment agar create_app() bisa membacanya
 import os
@@ -24,4 +24,10 @@ from app import create_app
 app = create_app()
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=PORT)
+    uvicorn.run(
+        app, 
+        host="0.0.0.0", 
+        port=PORT,
+        reload=False,
+        log_level=LOG_LEVEL.lower()
+    )

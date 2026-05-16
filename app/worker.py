@@ -36,7 +36,7 @@ def _get_notifications():
 
 def _run_listener():
     """Loop utama notification listener."""
-    print("[Listener] ✅ Notification listener aktif, polling setiap 2 detik...")
+    print("[Listener] ✅ Notification listener aktif, polling setiap 5 detik...")
     seen = set()
 
     while True:
@@ -62,14 +62,15 @@ def _run_listener():
                     print(f"[Listener] 📩 Notifikasi baru: {pkg} => Rp{amount:,}")
 
             # Bersihkan seen set jika terlalu besar untuk mencegah memory leak
-            if len(seen) > 10000:
+            if len(seen) > 1000:
                 seen.clear()
-                print("[Listener] 🔄 Cache notifikasi di-reset (>10.000 entri)")
+                print("[Listener] 🔄 Cache notifikasi di-reset (>1.000 entri)")
 
         except Exception as e:
             print(f"[Listener] ❌ Error di loop utama: {e}")
+            time.sleep(3)  # Tambah sleep tambahan jika error
 
-        time.sleep(2)
+        time.sleep(5)  # Interval polling 5 detik (mengurangi penggunaan CPU/RAM)
 
 
 def start_listener():
