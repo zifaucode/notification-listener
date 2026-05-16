@@ -13,6 +13,7 @@ cd "$PROJECT_ROOT" || exit 1
 
 PID_FILE="$PROJECT_ROOT/server.pid"
 LOG_FILE="$PROJECT_ROOT/server.log"
+TUNNEL_LOG="$PROJECT_ROOT/tunnel.log"
 
 clear
 echo -e "${C}${B}"
@@ -34,11 +35,15 @@ fi
 echo -e " ${G}[*]${W} Mengaktifkan Wake-Lock..."
 termux-wake-lock
 
-echo -e " ${G}[*]${W} Memulai service di background..."
+echo -e " ${G}[*]${W} Memulai service dan tunnel..."
 nohup python run.py > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > "$PID_FILE"
-sleep 1
+
+nohup cloudflared tunnel --url http://localhost:5000 > "$TUNNEL_LOG" 2>&1 &
+sleep 5
+
+PUBLIC_URL=$(grep -o 'https://[-0-9a-z]*\.trycloudflare\.com' "$TUNNEL_LOG" | head -n 1)
 
 echo -e "${C}"
 echo "┌──────────────────────────────────────────────────┐"
@@ -48,6 +53,7 @@ echo -e "│  ${B}WAKE-LOCK${W}   : ${G}AKTIF${W} (Mencegah Android sleep)      
 echo -e "│  ${B}LOG FILE${W}    : ${LOG_FILE,-31}${C} │"
 echo "│                                                  │"
 echo -e "│  🌐 ${B}DASHBOARD${W}: ${Y}http://localhost:5000${C}             │"
+echo -e "│  🔗 ${B}PUBLIC URL${W}: ${Y}${PUBLIC_URL:-Gagal memuat}${C} │"
 echo "└──────────────────────────────────────────────────┘"
 echo -e "${W}"
 echo " Tip: Gunakan perintah 'bash scripts/stop.sh' untuk menghentikan bot."
