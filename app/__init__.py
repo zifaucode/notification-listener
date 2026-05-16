@@ -49,7 +49,15 @@ def create_app() -> FastAPI:
     def on_startup():
         db.init_db()
         worker.start_listener()
-        tunnel.start_tunnel(port=PORT)
+
+        # Jika dijalankan dari start.sh dengan --no-tunnel,
+        # cloudflared dikelola oleh shell script, bukan Python.
+        no_tunnel = os.getenv("NO_TUNNEL", "0") == "1"
+        if no_tunnel:
+            print(f"[App] ℹ️  Mode --no-tunnel: Cloudflared dikelola oleh shell script")
+        else:
+            tunnel.start_tunnel(port=PORT)
+
         print(f"[App] ✅ Notification Listener Service berjalan di port {PORT}")
 
     # ── Import & include routes ─────────────────────────────────
