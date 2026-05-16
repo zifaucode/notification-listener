@@ -36,7 +36,7 @@ echo ""
 echo "[2/7] Install dependencies sistem Android (Python, Git, ADB, dll)..."
 pkg install -y \
     python \
-    termux-api \
+    android-tools \
     git \
     wget \
     libffi \
@@ -143,10 +143,9 @@ echo ""
 echo "╔══════════════════════════════════════════════════════════════╗"
 echo "║  ✅ Setup selesai!                                            ║"
 echo "╠══════════════════════════════════════════════════════════════╣"
-echo "║  Langkah selanjutnya:                                         ║"
 echo "║                                                               ║"
-echo "║  1. PENTING: Aktifkan Akses Notifikasi untuk Termux:API di    ║"
-echo "║     pengaturan sistem Android Anda.                           ║"
+echo "║  1. PENTING: Pastikan ADB terhubung.                          ║"
+echo "║     (Jalankan via USB atau Wireless Debugging)                ║"
 echo "║                                                               ║"
 echo "║  2. Jalankan bot:                                             ║"
 echo "║     bash $PROJECT_ROOT/scripts/start.sh                       ║"

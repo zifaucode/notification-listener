@@ -8,29 +8,84 @@ import subprocess
 import json
 import time
 import threading
+import os
+import signal
+import re
 
 from app import database as db
 from app import webhook as wh
 
 
 def _get_notifications():
-    """Ambil daftar notifikasi aktif dari Termux:API."""
+    """Ambil daftar notifikasi aktif via ADB Dumpsys."""
+    packages = db.get_allowed_packages()
+    if not packages:
+        return []
+
     try:
-        result = subprocess.run(
-            ["termux-notification-list"],
-            capture_output=True, text=True, timeout=5
+        proc = subprocess.run(
+            ["adb", "shell", "dumpsys", "notification", "--noredact"],
+            capture_output=True,
+            text=True,
+            timeout=10
         )
-        if result.returncode == 0:
-            data = json.loads(result.stdout)
-            return data if isinstance(data, list) else []
+        
+        if proc.returncode != 0:
+            if "device offline" in proc.stderr or "no devices" in proc.stderr:
+                print("[Listener] ⚠️  ADB belum terhubung! Jalankan 'adb connect 127.0.0.1:5555'.")
+            else:
+                print(f"[Listener] ⚠️  ADB error: {proc.stderr[:100]}")
+            return []
+            
+        output = proc.stdout
+        notifications = []
+        
+        # Split output per NotificationRecord
+        records = output.split("NotificationRecord(")
+        for record in records[1:]:
+            # Cari nama package
+            pkg_match = re.search(r'pkg=([^\s]+)', record)
+            if not pkg_match:
+                continue
+                
+            pkg = pkg_match.group(1)
+            if pkg not in packages:
+                continue
+                
+            # Cari ID notifikasi
+            id_match = re.search(r'id=(\d+)', record)
+            notif_id = id_match.group(1) if id_match else "0"
+            
+            # Cari title (Bisa format String (...) atau CharSequence (...))
+            title = ""
+            title_match = re.search(r'android\.title=[^\(]*\((.*?)\)\n', record)
+            if title_match:
+                title = title_match.group(1)
+                
+            # Cari text
+            text = ""
+            text_match = re.search(r'android\.text=[^\(]*\((.*?)\)\n', record)
+            if text_match:
+                text = text_match.group(1)
+                
+            if title or text:
+                notifications.append({
+                    "packageName": pkg,
+                    "id": notif_id,
+                    "title": title,
+                    "text": text,
+                    "content": ""
+                })
+                
+        return notifications
+        
     except FileNotFoundError:
-        print("[Listener] ⚠️  termux-notification-list tidak ditemukan. Install Termux:API.")
+        print("[Listener] ❌ Perintah ADB tidak ditemukan. Install dengan: pkg install android-tools")
     except subprocess.TimeoutExpired:
-        print("[Listener] ⚠️  termux-notification-list timeout.")
-    except json.JSONDecodeError:
-        print("[Listener] ⚠️  Output termux-notification-list bukan JSON valid.")
+        print("[Listener] ⚠️  ADB dumpsys timeout. Coba cabut-colok USB atau restart adb server.")
     except Exception as e:
-        print(f"[Listener] ❌ Error: {e}")
+        print(f"[Listener] ❌ Error ekstrak notif: {e}")
+        
     return []
 
 

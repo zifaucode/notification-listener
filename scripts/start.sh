@@ -23,12 +23,29 @@ R="\e[31m"
 W="\e[0m"
 B="\e[1m"
 
-clear
 echo -e "${C}${B}"
 echo "╔══════════════════════════════════════════════════╗"
 echo "║     NOTIFICATION-LISTENER - by ZIFAUCODE         ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo -e "${W}"
+
+# ─── Step 0: Cek Koneksi ADB ───────────────────────────────────
+echo -e " ${G}[0/3]${W} Mengecek koneksi ADB lokal..."
+if adb devices | grep -v "List" | grep -q "device"; then
+    echo -e "        ✅ ADB sudah terhubung!"
+else
+    echo -e "        ⚠️  Tidak ada device ADB terdeteksi."
+    echo -e "        Mencoba connect ke 127.0.0.1:5555..."
+    adb connect 127.0.0.1:5555 >/dev/null 2>&1 || true
+    sleep 1
+    if adb devices | grep -v "List" | grep -q "device"; then
+        echo -e "        ✅ Berhasil connect ke 127.0.0.1:5555"
+    else
+        echo -e "        ${R}❌ Peringatan: ADB masih tidak terhubung!${W}"
+        echo -e "        Pastikan Wireless Debugging aktif atau colok via PC."
+    fi
+fi
+echo ""
 
 # ─── Step 1: Bersihkan proses lama ──────────────────────────────
 echo -e " ${G}[1/3]${W} Mematikan proses lama jika ada..."
