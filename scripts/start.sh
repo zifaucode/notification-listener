@@ -7,6 +7,8 @@ C="\e[36m"
 W="\e[0m"
 B="\e[1m"
 
+set -e
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT" || exit 1
@@ -23,18 +25,9 @@ echo "║     NOTIFICATION-LISTENER - by ZIFAUCODE         ║"
 echo "╚══════════════════════════════════════════════════╝"
 echo -e "${W}"
 
-if [ -f "$PID_FILE" ]; then
-    SERVER_PID=$(cat "$PID_FILE")
-    if kill -0 "$SERVER_PID" 2>/dev/null; then
-        echo -e " ${Y}⚠️  Service sudah berjalan dengan PID: ${SERVER_PID}${W}"
-        echo -e " ${Y}   Dashboard: http://localhost:5000${W}"
-        echo ""
-        exit 0
-    fi
-fi
-
-echo -e " ${G}[*]${W} Mengaktifkan Wake-Lock..."
-termux-wake-lock
+echo -e " ${G}[*]${W} Mematikan proses lama jika ada..."
+pkill -f "python run.py" 2>/dev/null || true
+sleep 1
 
 echo -e " ${G}[*]${W} Memulai Python server di background..."
 nohup python run.py > "$LOG_FILE" 2>&1 &
