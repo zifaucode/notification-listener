@@ -14,6 +14,7 @@ cd "$PROJECT_ROOT" || exit 1
 PID_FILE="$PROJECT_ROOT/server.pid"
 LOG_FILE="$PROJECT_ROOT/server.log"
 TUNNEL_LOG="$PROJECT_ROOT/tunnel.log"
+CF_PID_FILE="$PROJECT_ROOT/cloudflared.pid"
 
 clear
 echo -e "${C}${B}"
@@ -35,26 +36,51 @@ fi
 echo -e " ${G}[*]${W} Mengaktifkan Wake-Lock..."
 termux-wake-lock
 
-echo -e " ${G}[*]${W} Memulai service dan tunnel..."
+echo -e " ${G}[*]${W} Memulai Python server di background..."
 nohup python run.py > "$LOG_FILE" 2>&1 &
 SERVER_PID=$!
 echo $SERVER_PID > "$PID_FILE"
+sleep 2
 
-nohup cloudflared tunnel --url http://localhost:5000 > "$TUNNEL_LOG" 2>&1 &
-sleep 5
+echo -e " ${G}[*]${W} Memulai Cloudflare Quick Tunnel..."
 
-PUBLIC_URL=$(grep -oP 'https://[a-z0-9]+(-[a-z0-9]+)+\.trycloudflare\.com' "$TUNNEL_LOG" | head -n 1)
+# Matikan tunnel lama jika ada
+pkill -f "cloudflared tunnel" 2>/dev/null || true
+sleep 1
+
+# Jalankan cloudflared dengan SSL cert Termux (wajib agar TLS bisa terverifikasi)
+nohup env SSL_CERT_FILE="$PREFIX/etc/tls/cert.pem" \
+    termux-chroot cloudflared tunnel --url http://localhost:5000 \
+    --no-autoupdate \
+    > "$TUNNEL_LOG" 2>&1 &
+CF_PID=$!
+echo $CF_PID > "$CF_PID_FILE"
+
+echo -e " ${G}[*]${W} Menunggu URL tunnel (maks 30 detik)..."
+
+# Poll log hingga URL muncul (max 30 detik)
+PUBLIC_URL=""
+for i in $(seq 1 30); do
+    PUBLIC_URL=$(grep -o 'https://[^ ]*\.trycloudflare\.com' "$TUNNEL_LOG" 2>/dev/null \
+        | grep -v 'api.trycloudflare.com' \
+        | head -1)
+    if [ -n "$PUBLIC_URL" ]; then
+        break
+    fi
+    sleep 1
+    echo -n "."
+done
+echo ""
 
 echo -e "${C}"
 echo "┌──────────────────────────────────────────────────┐"
 echo -e "│  ${B}STATUS${W}      : ${G}BERJALAN DI BACKGROUND${C}            │"
-echo -e "│  ${B}PID${W}         : ${SERVER_PID,-31}${C} │"
+printf "│  ${B}PID${W}         : %-31s${C} │\n" "$SERVER_PID"
 echo -e "│  ${B}WAKE-LOCK${W}   : ${G}AKTIF${W} (Mencegah Android sleep)      ${C}│"
-echo -e "│  ${B}LOG FILE${W}    : ${LOG_FILE,-31}${C} │"
 echo "│                                                  │"
-echo -e "│  🌐 ${B}DASHBOARD${W}: ${Y}http://localhost:5000${C}             │"
-echo -e "│  🔗 ${B}PUBLIC URL${W}: ${Y}${PUBLIC_URL:-Gagal memuat}${C} │"
+echo -e "│  🌐 ${B}LOKAL${W}    : ${Y}http://localhost:5000${C}             │"
+printf "│  🔗 ${B}PUBLIK${W}   : ${Y}%-31s${C} │\n" "${PUBLIC_URL:-Gagal (cek: cat tunnel.log)}"
 echo "└──────────────────────────────────────────────────┘"
 echo -e "${W}"
-echo " Tip: Gunakan perintah 'bash scripts/stop.sh' untuk menghentikan bot."
+echo " Tip: Gunakan perintah 'bash scripts/stop.sh' untuk menghentikan."
 echo ""
