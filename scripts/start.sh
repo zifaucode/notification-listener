@@ -43,7 +43,7 @@ echo $SERVER_PID > "$PID_FILE"
 nohup cloudflared tunnel --url http://localhost:5000 > "$TUNNEL_LOG" 2>&1 &
 sleep 5
 
-PUBLIC_URL=$(grep -o 'https://[-0-9a-z]*\.trycloudflare\.com' "$TUNNEL_LOG" | head -n 1)
+PUBLIC_URL=$(grep -oP 'https://[a-z0-9]+(-[a-z0-9]+)+\.trycloudflare\.com' "$TUNNEL_LOG" | head -n 1)
 
 echo -e "${C}"
 echo "┌──────────────────────────────────────────────────┐"
